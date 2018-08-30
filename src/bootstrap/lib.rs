@@ -737,6 +737,15 @@ impl Build {
         self.config.jobs.unwrap_or_else(|| num_cpus::get() as u32)
     }
 
+    fn debuginfo_map(&self) -> Option<String> {
+        if !self.config.rust_remap_debuginfo {
+            return None
+        }
+
+        let sha = self.rust_sha().expect("failed to find rust sha");
+        Some(format!("{}=/rustc/{}", self.src.display(), sha))
+    }
+
     /// Returns the path to the C compiler for the target specified.
     fn cc(&self, target: Interned<String>) -> &Path {
         self.cc[&target].path()
@@ -765,6 +774,12 @@ impl Build {
         // See: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=78936
         if &*target == "i686-pc-windows-gnu" {
             base.push("-fno-omit-frame-pointer".into());
+        }
+
+        if self.cc(target).ends_with("clang") {
+            if let Some(map) = self.debuginfo_map() {
+                base.push(format!("-fdebug-prefix-map={}", map).into());
+            }
         }
         base
     }
