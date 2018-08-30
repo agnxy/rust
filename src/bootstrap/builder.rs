@@ -876,6 +876,10 @@ impl<'a> Builder<'a> {
             cargo.env("RUSTC_HOST_CRT_STATIC", x.to_string());
         }
 
+        if let Some(map) = self.build.debuginfo_map() {
+            cargo.env("RUSTC_DEBUGINFO_MAP", map);
+        }
+
         // Enable usage of unstable features
         cargo.env("RUSTC_BOOTSTRAP", "1");
         self.add_rust_test_threads(&mut cargo);
